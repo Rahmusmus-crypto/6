@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Білім Шыңы: Білім әлеміне саяхат</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Comfortaa', cursive;
+            background: linear-gradient(135deg, #fff5f5 0%, #f0fff4 100%);
+            min-height: 100vh;
+            color: #2d3436;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 35px;
+            border: 4px solid #ffffff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+        }
+        .ai-hint-box {
+            background: #f0f7ff;
+            border-left: 8px solid #4299e1;
+            border-radius: 15px;
+        }
+        .descriptor-badge {
+            font-size: 0.8rem;
+            color: #4a5568;
+            background: #edf2f7;
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .score-panel {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .math-game-card {
+            border: 3px dashed #ed8936;
+            background: #fffaf0;
+        }
+        .mood-btn {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .mood-btn:hover {
+            transform: scale(1.3);
+        }
+        input {
+            border: 3px solid #cbd5e0;
+            border-radius: 20px;
+            padding: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div id="app" class="max-w-4xl mx-auto">
+    <!-- 1. Тіркелу және Аты-жөнін енгізу -->
+    <div id="registration" class="glass-card p-12 text-center mt-10 animate-fade-in">
+        <div class="text-8xl mb-6">🌟</div>
+        <h1 class="text-4xl font-bold text-indigo-700 mb-4">Білім шыңы</h1>
+        <p class="text-xl text-gray-600 mb-8">Сәлем, кішкентай білімпаз! Өз аты-жөніңді жазшы:</p>
+        <div class="flex flex-col items-center gap-4">
+            <input type="text" id="studentNameInput" placeholder="Аты-жөніңіз..." class="w-full max-w-md">
+            <button onclick="initApp()" class="mt-4 px-16 py-5 bg-indigo-600 text-white text-xl font-bold rounded-3xl shadow-xl hover:bg-indigo-700 transition-all transform hover:scale-105">
+                Саяхатты бастау 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Негізгі жұмыс алаңы -->
+    <div id="mainContent" class="hidden">
+        <!-- Жоғарғы панель -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div class="glass-card px-8 py-4 flex items-center gap-4 border-l-8 border-indigo-500">
+                <span class="text-4xl">🧑‍🎓</span>
+                <div>
+                    <h2 id="userNameDisplay" class="font-bold text-2xl text-indigo-800"></h2>
+                    <p class="text-sm text-gray-500">1-сынып оқушысы</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="score-panel px-6 py-3 rounded-2xl shadow-lg font-bold">
+                    🍎 Ана тілі: <span id="anaTiliTotal">0</span>/10
+                </div>
+                <div class="score-panel px-6 py-3 rounded-2xl shadow-lg font-bold from-orange-400 to-red-500">
+                    🔢 Математика: <span id="matemTotal">0</span>/10
+                </div>
+            </div>
+        </header>
+
+        <!-- Көңіл-күй және Ата-анамен байланыс -->
+        <div class="glass-card p-6 mb-8 flex flex-wrap items-center justify-between gap-6 border-b-8 border-yellow-300">
+            <div class="flex items-center gap-4">
+                <span class="font-bold text-gray-700">Көңіл-күйің қалай?</span>
+                <div class="flex gap-4">
+                    <button onclick="handleMood('Көңілді', '😊')" class="mood-btn text-4xl">😊</button>
+                    <button onclick="handleMood('Орташа', '😐')" class="mood-btn text-4xl">😐</button>
+                    <button onclick="handleMood('Көңілсіз', '😢')" class="mood-btn text-4xl">😢</button>
+                </div>
+            </div>
+            <button onclick="showSos()" class="flex items-center gap-3 px-8 py-4 bg-red-500 text-white font-bold rounded-2xl shadow-lg hover:bg-red-600 animate-pulse">
+                <span>🆘 SOS (Ата-ана)</span>
+            </button>
+        </div>
+
+        <!-- Алгоритм бойынша пәндерді көрсету -->
+        <div id="subjectTitle" class="text-center mb-10">
+            <h2 id="currentSubjectName" class="text-3xl font-black text-gray-800 uppercase tracking-widest">🍎 Ана тілі сабағы</h2>
+            <div class="h-2 w-32 bg-indigo-500 mx-auto mt-2 rounded-full"></div>
+        </div>
+
+        <!-- Тапсырмалар контейнері -->
+        <div id="questionsContainer" class="space-y-10 mb-20"></div>
+    </div>
+
+    <!-- Feedback Модальді терезе (ЖИ Көмекшісі) -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-[45px] p-10 max-w-lg w-full text-center shadow-2xl transform transition-all">
+            <div id="modalEmoji" class="text-9xl mb-6"></div>
+            <h2 id="modalTitle" class="text-3xl font-bold mb-4"></h2>
+            <div id="modalAiMsg" class="ai-hint-box p-6 text-left mb-8 text-lg italic text-blue-900 border-2 border-blue-100"></div>
+            <button onclick="closeModal()" id="modalCloseBtn" class="w-full py-5 bg-indigo-600 text-white text-xl font-bold rounded-3xl hover:bg-indigo-700 shadow-xl">Жалғастыру ➡️</button>
+        </div>
+    </div>
+
+    <!-- SOS Модальді терезе -->
+    <div id="sosModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-[45px] p-12 max-w-md w-full text-center border-t-8 border-red-500">
+            <div class="text-7xl mb-6">📞</div>
+            <h2 class="text-3xl font-bold text-red-600 mb-4">Ата-анамен байланыс</h2>
+            <p class="text-gray-600 mb-2 text-lg">Ата-анаңның телефон нөмірі:</p>
+            <p class="text-3xl font-black text-gray-800 mb-8">+7 707 555 44 33</p>
+            <div class="grid gap-4">
+                <button onclick="sendSosSms()" class="py-5 bg-red-500 text-white text-xl font-bold rounded-3xl shadow-lg">✉️ Көңіл-күйім туралы хабарлау</button>
+                <button onclick="hideSos()" class="py-4 bg-gray-100 text-gray-600 font-bold rounded-3xl">Артқа оралу</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let studentName = "";
+    let scoreAnaTili = 0;
+    let scoreMatem = 0;
+    let currentSubject = 'ana-tili'; // Алгоритм: алдымен Ана тілі
+    let currentTaskIndex = 0;
+    
+    // 10 Ана тілі тапсырмасы
+    const anaTiliTasks = [
+        { q: "Суреттегі жануардың атын жаз:", img: "🐕", ans: "Ит", desc: "Заттың атын атау.", hint: "Бұл үйді күзетеді. 'һау-һау' дейді." },
+        { q: "Алманың түсі қандай?", img: "🍎", ans: "Қызыл", desc: "Сын есімді ажырату.", hint: "Бұл түс қызанаққа ұқсас." },
+        { q: "Оқу құралын ата:", img: "✏️", ans: "Қалам", desc: "Қоршаған ортаны тану.", hint: "Мұнымен біз дәптерге жазамыз." },
+        { q: "Сөздегі жетіспейтін әріпті қой: '...рыс'", img: "🦁", ans: "А", desc: "Дыбыстық талдау.", hint: "Әліпбидің ең бірінші әрпі." },
+        { q: "Аспанда не жарқырап тұр?", img: "☀️", ans: "Күн", desc: "Табиғатты тану.", hint: "Ол бізге жылу береді." },
+        { q: "Көпше түрін тап: 'Доп...'", img: "⚽⚽", ans: "Доптар", desc: "Көпше жалғауын қолдану.", hint: "-тар жалғауын жалғап көр." },
+        { q: "Жүйрік жануарды ата:", img: "🐎", ans: "Жылқы", desc: "Жануарларды тану.", hint: "Ол кісінейді." },
+        { q: "Мен мектепке ... (не істеймін?)", ans: "барамын", desc: "Сөйлем құрау.", hint: "Әрекетті білдіретін сөз жаз." },
+        { q: "Тәтті сары жеміс:", img: "🍌", ans: "Банан", desc: "Жемістерді ажырату.", hint: "Маймылдар жақсы көреді." },
+        { q: "Сүт беретін жануар:", img: "🐄", ans: "Сиыр", desc: "Пайдалы жануарды білу.", hint: "Ол 'мө-ө' дейді." }
+    ];
+
+    // 10 Математика тапсырмасы (Геймификацияланған)
+    const matematikaTasks = [
+        { q: "Ойын: 1 + 1 неше болады?", ans: "2", desc: "Қарапайым қосу.", hint: "Бір саусаққа тағы бір саусақты қос." },
+        { q: "Үшбұрыштың неше бұрышы бар?", img: "🔺", ans: "3", desc: "Пішіндерді тану.", hint: "Атында-ақ жауабы тұр: 'ҮШ'..." },
+        { q: "4-тен кейін қай сан келеді?", ans: "5", desc: "Сандар реті.", hint: "1, 2, 3, 4 және ..." },
+        { q: "2 мен 4-тің арасындағы санды тап:", ans: "3", desc: "Сандардың орналасуы.", hint: "Екіден кейін келетін сан." },
+        { q: "Ойын: 5 кәмпиттің 1-ін жеп қойсаң, нешеуі қалады?", ans: "4", desc: "Азайту амалы.", hint: "Бестен бірді алып таста." },
+        { q: "Шаршының неше қабырғасы бар?", img: "⬜", ans: "4", desc: "Геометрия негіздері.", hint: "Барлық жағын санап көр." },
+        { q: "Ең кіші санды жаз (0-ден 9-ға дейін):", ans: "0", desc: "Сандарды салыстыру.", hint: "Ештеңе жоқ дегенді білдіретін сан." },
+        { q: "7 саны цифрмен қалай жазылады?", ans: "7", desc: "Цифрларды тану.", hint: "Апта күндерінің саны." },
+        { q: "Ойын: 3 допқа 2 допты қоссақ?", img: "🏀🏀🏀 + 🏀🏀", ans: "5", desc: "Топтау және санау.", hint: "Барлық доптарды бірге сана." },
+        { q: "9 үлкен бе, әлде 10 ба?", ans: "10", desc: "Салыстыру.", hint: "Санағанда соңында келетін сан үлкен." }
+    ];
+
+    function initApp() {
+        const name = document.getElementById('studentNameInput').value;
+        if (name.trim() === "") {
+            alert("Өтінемін, аты-жөніңді енгіз!");
+            return;
+        }
+        studentName = name;
+        document.getElementById('userNameDisplay').innerText = studentName;
+        document.getElementById('registration').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = '';
+        const tasks = currentSubject === 'ana-tili' ? anaTiliTasks : matematikaTasks;
+
+        tasks.forEach((task, idx) => {
+            const card = document.createElement('div');
+            card.id = `card-${idx}`;
+            card.className = `glass-card p-10 relative overflow-hidden transition-all duration-500 ${currentSubject === 'matematika' ? 'math-game-card' : ''}`;
+            card.innerHTML = `
+                <div class="absolute top-0 right-0 bg-indigo-600 text-white px-8 py-3 rounded-bl-3xl font-bold text-xl shadow-md">
+                    Тапсырма #${idx + 1}
+                </div>
+                <div class="mb-6 flex items-center gap-3">
+                    <span class="descriptor-badge font-bold">📋 Дискриптор: ${task.desc}</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-6 text-gray-800">${task.q}</h3>
+                ${task.img ? `<div class="text-8xl my-10 text-center animate-bounce duration-[2000ms]">${task.img}</div>` : ''}
+                
+                <div class="flex flex-col md:flex-row gap-4 mt-8">
+                    <input type="text" id="ans-${idx}" placeholder="Жауапты жаз..." class="flex-1 shadow-inner">
+                    <button onclick="checkTask(${idx})" class="px-12 py-5 bg-green-500 text-white font-bold rounded-2xl shadow-xl hover:bg-green-600 transition-transform active:scale-95">Тексеру ✅</button>
+                </div>
+                
+                <div class="mt-6 flex justify-between items-center">
+                    <button onclick="getAiHint(${idx})" class="text-indigo-600 font-black hover:underline flex items-center gap-2">
+                        <span>🤖 ЖИ көмекшісінен сұрау</span>
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function checkTask(idx) {
+        const tasks = currentSubject === 'ana-tili' ? anaTiliTasks : matematikaTasks;
+        const task = tasks[idx];
+        const input = document.getElementById(`ans-${idx}`);
+        const userAns = input.value.trim().toLowerCase();
+        const correctAns = task.ans.toLowerCase();
+
+        const modal = document.getElementById('feedbackModal');
+        const emoji = document.getElementById('modalEmoji');
+        const title = document.getElementById('modalTitle');
+        const aiMsg = document.getElementById('modalAiMsg');
+        const card = document.getElementById(`card-${idx}`);
+
+        if (userAns === correctAns) {
+            if (currentSubject === 'ana-tili') scoreAnaTili++; else scoreMatem++;
+            emoji.innerText = '🌈';
+            title.innerText = 'Керемет, ' + studentName + '!';
+            aiMsg.innerHTML = `<strong>Жасанды Интеллект:</strong> Жарайсың! Сен бұл тапсырманы өте дұрыс орындадың. 1 ұпай иелендің! <br><br>Жауап: <b>${task.ans}</b>.`;
+            card.classList.add('bg-green-100', 'border-green-400', 'opacity-60');
+        } else {
+            emoji.innerText = '💡';
+            title.innerText = 'Кішкене қате кетті...';
+            aiMsg.innerHTML = `<strong>Жасанды Интеллект:</strong> Мұңайма, қателік - ол үйренудің жолы. Дұрыс жауап <b>${task.ans}</b> болуы керек еді. Келесі жолы міндетті түрде болады!`;
+            card.classList.add('bg-red-50', 'border-red-200', 'opacity-60');
+        }
+
+        input.disabled = true;
+        card.querySelector('button').disabled = true;
+        updateScores();
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        // Тапсырмалар аяқталғанын тексеру
+        checkSubjectCompletion();
+    }
+
+    function checkSubjectCompletion() {
+        const tasks = currentSubject === 'ana-tili' ? anaTiliTasks : matematikaTasks;
+        let answeredCount = 0;
+        tasks.forEach((_, idx) => {
+            if (document.getElementById(`ans-${idx}`).disabled) answeredCount++;
+        });
+
+        if (answeredCount === 10) {
+            setTimeout(() => {
+                showSubjectResult();
+            }, 1000);
+        }
+    }
+
+    function showSubjectResult() {
+        const modal = document.getElementById('feedbackModal');
+        const title = document.getElementById('modalTitle');
+        const aiMsg = document.getElementById('modalAiMsg');
+        const btn = document.getElementById('modalCloseBtn');
+
+        if (currentSubject === 'ana-tili') {
+            title.innerText = 'Ана тілі сабағы аяқталды! 🎉';
+            aiMsg.innerHTML = `Сен бұл пәннен <b>${scoreAnaTili} ұпай</b> жинадың. Енді екінші алгоритм бойынша Математика пәніне көшеміз. Дайынсың ба?`;
+            btn.innerText = 'Математикаға көшу 🔢';
+            btn.onclick = () => {
+                currentSubject = 'matematika';
+                document.getElementById('currentSubjectName').innerHTML = '🔢 Математика сабағы (Ойын түрінде)';
+                renderTasks();
+                closeModal();
+                btn.onclick = closeModal;
+                btn.innerText = 'Жалғастыру ➡️';
+            };
+        } else {
+            title.innerText = 'Математика сабағы аяқталды! 🏆';
+            aiMsg.innerHTML = `Сен Математикадан <b>${scoreMatem} ұпай</b> жинадың. <br><br> Жалпы нәтижең: <b>${scoreAnaTili + scoreMatem} ұпай</b>. Сен өте ақылды баласың!`;
+            btn.innerText = 'Қайта бастау 🔄';
+            btn.onclick = () => location.reload();
+        }
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function getAiHint(idx) {
+        const tasks = currentSubject === 'ana-tili' ? anaTiliTasks : matematikaTasks;
+        const task = tasks[idx];
+        const modal = document.getElementById('feedbackModal');
+        document.getElementById('modalEmoji').innerText = '🤖';
+        document.getElementById('modalTitle').innerText = 'ЖИ Көмекшісі';
+        document.getElementById('modalAiMsg').innerHTML = `<strong>ЖИ Көмекшісі:</strong> Саған кішкене кеңес берейін: <br><br> "<em>${task.hint}</em>"`;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function handleMood(mood, emoji) {
+        const modal = document.getElementById('feedbackModal');
+        document.getElementById('modalEmoji').innerText = emoji;
+        document.getElementById('modalTitle').innerText = 'Көңіл-күйің қабылданды';
+        document.getElementById('modalAiMsg').innerHTML = `<strong>ЖИ Көмекшісі:</strong> Сенің қазіргі жағдайың: <b>${mood}</b>. Мен бұл туралы ата-анаңа хабарлама жібердім. Біз сенімен біргеміз! ❤️`;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function showSos() {
+        document.getElementById('sosModal').classList.remove('hidden');
+        document.getElementById('sosModal').classList.add('flex');
+    }
+
+    function hideSos() {
+        document.getElementById('sosModal').classList.add('hidden');
+    }
+
+    function sendSosSms() {
+        alert("Ата-анаңызға хабарлама жіберілді: 'Сәлеметсіз бе! Балаңыз қазір " + studentName + " сабақ орындау барысында көмекке мұқтаж немесе көңіл-күйі төмен. Телефон нөміріңіз: +7 707 555 44 33'");
+        hideSos();
+    }
+
+    function updateScores() {
+        document.getElementById('anaTiliTotal').innerText = scoreAnaTili;
+        document.getElementById('matemTotal').innerText = scoreMatem;
+    }
+
+    function closeModal() {
+        document.getElementById('feedbackModal').classList.add('hidden');
+        document.getElementById('feedbackModal').classList.remove('flex');
+    }
+</script>
+
+</body>
+</html>
